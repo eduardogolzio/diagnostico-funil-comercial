@@ -29,11 +29,11 @@ isso representa?
 
 | Fase | Entrega | Status |
 |---|---|---|
-| 1 | Diagnóstico inicial e pergunta de negócio | entregue |
+| 1 | [Diagnóstico, pergunta de negócio e perguntas complementares (PDF)](entregaveis/00-diagnostico-e-perguntas.pdf) | entregue, revisado na fase 2 |
 | 2 | [Fontes de dados](entregaveis/01-fontes-de-dados.md) | entregue |
 | 2 | [Limpeza e mineração dos dados](entregaveis/02-limpeza-e-mineracao.md) | entregue |
 | 2 | [Regra de negócio, objetivo, métricas e perguntas complementares](entregaveis/03-regra-de-negocio.md) | entregue |
-| 3 | Dashboard de acompanhamento (Streamlit) | próxima fase |
+| 3 | Dashboard de acompanhamento (Streamlit); esboço da interface no [PDF](entregaveis/00-diagnostico-e-perguntas.pdf) | próxima fase |
 
 ## Principais achados até aqui
 
@@ -59,7 +59,7 @@ CRM e Meta Ads ──extração anonimizada──> data/raw/ ──src/clean.py�
 ## Estrutura do repositório
 
 ```
-entregaveis/     documentos entregues ao cliente
+entregaveis/     documentos entregues ao cliente (00 em PDF, 01 a 03 em Markdown)
 src/clean.py     limpeza, com log por passo em data/processed/limpeza_log.csv
 src/mine.py      mineração por segmento, uma tabela por pergunta
 tests/           testes das regras de limpeza
