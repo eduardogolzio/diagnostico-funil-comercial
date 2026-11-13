@@ -1,10 +1,10 @@
-# Diagnóstico de funil comercial
+# Diagnóstico de funil comercial | Nexus Assessoria
 
 **Cliente:** Clínica odontológica em Campina Grande - PB
-**Equipe da assessoria:** Eduardo e Henrique
+**Assessoria:** Nexus Assessoria (Eduardo e Henrique)
 **Status:** fase 2 entregue (fontes, limpeza e regra de negócio)
 
-Projeto de assessoria comercial desenvolvido na disciplina de Análise de Dados e BI. Os nomes da clínica, da
+Projeto da Nexus Assessoria, assessoria comercial, desenvolvido na disciplina de Análise de Dados e BI. Os nomes da clínica, da
 agência de publicidade que gere os anúncios e dos sistemas usados foram omitidos por confidencialidade.
 
 ## O problema

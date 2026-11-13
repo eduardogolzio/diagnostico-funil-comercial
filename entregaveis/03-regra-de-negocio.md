@@ -3,7 +3,7 @@
 Atualiza o documento da fase 1 (diagnóstico) com as regras de negócio que a análise segue, as métricas e
 cinco perguntas complementares à premissa inicial.
 
-Equipe da assessoria: Eduardo e Henrique. Cliente: Clínica odontológica em Campina Grande - PB. Recorte: 01/06 a 31/08/2026.
+Assessoria: Nexus Assessoria (Eduardo e Henrique). Cliente: Clínica odontológica em Campina Grande - PB. Recorte: 01/06 a 31/08/2026.
 
 ## Premissa inicial (fase 1)
 
@@ -38,7 +38,7 @@ semana.
 | RN05 | **Venda** é o lead em Venda Realizada, com status CONVERTED ou com negócio WON. A receita é o `closedValue` do negócio. |
 | RN06 | **Lead de anúncio** é o criado automaticamente pela mensagem do anúncio. **Cadastro manual** é o lançado pela equipe (hora gravada como meia-noite exata). Os dois são analisados em separado. |
 | RN07 | **Tempo de primeira resposta** vai da primeira mensagem do lead até a primeira mensagem da equipe depois dela. Mais de 72 horas não conta como primeira resposta. |
-| RN08 | **Horário comercial** é segunda a sexta, das 8h às 18h, no horário de São Paulo. É suposição da assessoria: a clínica não informou o horário dela. |
+| RN08 | **Horário comercial** é segunda a sexta, das 8h às 18h, no horário de São Paulo. É suposição da Nexus: a clínica não informou o horário dela. |
 | RN09 | Análise de atendimento (resposta, engajamento) só usa leads que entraram a partir de **07/08/2026**, a data da primeira mensagem guardada no CRM. |
 | RN10 | Lead parado em Em Contato está **em aberto**, não perdido, porque a clínica não usa a etapa Perdido. |
 

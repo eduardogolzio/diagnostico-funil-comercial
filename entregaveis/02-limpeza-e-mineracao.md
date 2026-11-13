@@ -1,5 +1,7 @@
 # Entregável 2. Limpeza e mineração dos dados
 
+Nexus Assessoria. Diagnóstico de funil comercial, fase 2.
+
 Os passos estão em `src/clean.py` (limpeza) e `src/mine.py` (mineração). A cada execução, a limpeza grava
 `data/processed/limpeza_log.csv` com as linhas que entraram e saíram de cada passo. Os números abaixo
 vêm desse log, na extração de 12/11/2026.

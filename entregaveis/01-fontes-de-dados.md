@@ -1,6 +1,6 @@
 # Entregável 1. Fontes de dados
 
-Diagnóstico de funil comercial, fase 2. Cliente: Clínica odontológica em Campina Grande - PB. A clínica
+Nexus Assessoria. Diagnóstico de funil comercial, fase 2. Cliente: Clínica odontológica em Campina Grande - PB. A clínica
 anuncia no Meta Ads por meio de uma agência de publicidade e atende os pacientes num CRM. Os nomes da
 clínica, da agência e dos sistemas foram omitidos por confidencialidade.
 Recorte: 01/06/2026 a 31/08/2026, com o trimestre anterior (01/03 a 31/05/2026) como base de comparação.
