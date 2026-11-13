@@ -1,0 +1,8 @@
+stage_order,stage_name,is_conversion,is_lost
+1,Novo Lead,False,False
+2,Em Contato,False,False
+3,Agendado,False,False
+4,Faltante,False,False
+5,Avaliado,False,False
+6,Venda Realizada,True,False
+7,Perdido,False,True

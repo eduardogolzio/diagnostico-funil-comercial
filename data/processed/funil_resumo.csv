@@ -1,0 +1,13 @@
+periodo,etapa,leads,passagem,conversao_total
+anterior,Novo Lead,462,,1.0
+anterior,Em Contato,404,0.8745,0.8745
+anterior,Agendado,50,0.1238,0.1082
+anterior,Avaliado,31,0.62,0.0671
+anterior,Venda Realizada,14,0.4516,0.0303
+anterior,Faltante (desvio),19,0.38,
+atual,Novo Lead,602,,1.0
+atual,Em Contato,544,0.9037,0.9037
+atual,Agendado,50,0.0919,0.0831
+atual,Avaliado,23,0.46,0.0382
+atual,Venda Realizada,10,0.4348,0.0166
+atual,Faltante (desvio),27,0.54,

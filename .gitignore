@@ -1,0 +1,9 @@
+# sal da pseudonimização: sem ele o hash não se reverte
+data/.salt
+__pycache__/
+.pytest_cache/
+.venv/
+.remember/
+skill-observations/
+# extração: cliente da API do CRM, fica só na máquina local
+src/extract_crm.py

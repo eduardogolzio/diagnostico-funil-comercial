@@ -1,0 +1,12 @@
+passo,etapa,linhas_antes,linhas_depois,descricao
+1,carga,1073,1073,"leads.csv lido, dois trimestres (atual e anterior)"
+2,tipos,1073,1073,"datas convertidas de UTC para America/Sao_Paulo, valores para número; 0 data(s) de entrada inválida(s)"
+3,registros inválidos,1073,1073,"removidos leads excluídos no CRM, sem data de entrada ou sem etapa"
+4,duplicatas,1073,1064,0 repetido(s) por paginação; 9 reentrada(s) parada(s) em Novo Lead
+5,funil derivado,1064,1064,flags em_contato/agendou/faltou/avaliado/vendeu a partir da etapa atual; Faltante tratado como desvio
+6,inconsistências,1064,1064,"marcadas, não removidas: venda_sem_valor=1, status_etapa_divergem=0, consulta_antes_entrada=1, agendado_sem_data=3"
+7,mensagens,2654,2632,removidas mensagens sem horário ou direção e repetidas
+8,cobertura de mensagens,602,215,histórico do WhatsApp começa em 07/08/2026; só leads a partir daí entram nas análises de atendimento
+9,tempo de resposta,602,602,calculado por lead; respostas acima de 72h viram vazio; 5 lead(s) sem resposta da equipe
+10,follow-ups,602,602,11 lead(s) com follow-up registrado; ausência = zero
+11,meta ads,602,602,data/raw/meta_ads.csv ausente: custo por lead fica de fora

@@ -1,0 +1,8 @@
+faixa_resposta,leads,agendou,taxa_agendamento,vendeu,taxa_venda,receita
+2 a 24 h,97,4,0.0412,0,0.0,0.0
+24 a 72 h,28,1,0.0357,0,0.0,0.0
+30 min a 2 h,36,1,0.0278,0,0.0,0.0
+5 a 30 min,24,4,0.1667,1,0.0417,9000.0
+até 5 min,13,0,0.0,0,0.0,0.0
+sem conversa,9,1,0.1111,0,0.0,0.0
+sem resposta em 72 h,5,0,0.0,0,0.0,0.0
