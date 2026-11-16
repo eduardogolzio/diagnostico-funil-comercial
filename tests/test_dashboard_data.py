@@ -104,3 +104,10 @@ def test_mining_tables_on_empty_filter_keep_their_columns():
     empty = frame({}).iloc[0:0].assign(receita=[])
     assert mine.ads(empty).empty
     assert "leads" in mine.summarize(empty, "periodo").columns
+
+
+def test_booking_scenario_is_dropped_when_rate_is_already_above_target():
+    import mine
+
+    df = frame({"agendou": True, "avaliado": True, "vendeu": True, "receita": 1000.0}, {}).assign(faltou=False)
+    assert not mine.lost_revenue(df)["cenario"].str.startswith("agendamento").any()

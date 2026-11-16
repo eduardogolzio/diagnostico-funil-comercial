@@ -21,6 +21,7 @@ RESPONSE_LABELS = ["até 5 min", "5 a 30 min", "30 min a 2 h", "2 a 24 h", "24 a
 WAIT_BINS = [-1, 2, 7, 14, 10_000]
 WAIT_LABELS = ["0 a 2 dias", "3 a 7 dias", "8 a 14 dias", "15+ dias"]
 WEEKDAYS = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
+BOOKING_TARGET = 0.15  # meta de agendamento dos atendidos usada no cenário de receita
 BUSINESS_HOURS = (
     8,
     18,
@@ -166,19 +167,18 @@ def lost_revenue(df: pd.DataFrame) -> pd.DataFrame:
             "vendas_extra": round(no_shows * eval_to_sale, 1),
             "valor": round(no_shows * eval_to_sale * ticket, 2),
         },
-        {
-            "cenario": "agendamento sobe de "
-            f"{booked / contacted:.0%} para 15% dos atendidos"
-            if contacted
-            else "agendamento",
-            "vendas_extra": round(
-                (0.15 * contacted - booked) * show_rate * eval_to_sale, 1
-            ),
-            "valor": round(
-                (0.15 * contacted - booked) * show_rate * eval_to_sale * ticket, 2
-            ),
-        },
     ]
+    # Meta de 15% só é cenário de ganho para quem agenda abaixo dela; acima daria receita negativa.
+    extra_booked = BOOKING_TARGET * contacted - booked
+    if extra_booked > 0:
+        rows.append(
+            {
+                "cenario": f"agendamento sobe de {booked / contacted:.0%} para "
+                f"{BOOKING_TARGET:.0%} dos atendidos",
+                "vendas_extra": round(extra_booked * show_rate * eval_to_sale, 1),
+                "valor": round(extra_booked * show_rate * eval_to_sale * ticket, 2),
+            }
+        )
     return pd.DataFrame(rows)
 
 

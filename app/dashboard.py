@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "app"))
 import charts as ch
+from charts import Segment
 
 import dashboard_data as dd
 import mine
@@ -37,7 +38,6 @@ h1 { font-size: 1.6rem !important; font-weight: 600 !important; letter-spacing: 
 .strip .k { color: #6b6a66; font-size: .85rem; }
 .strip .v { color: #0b0b0b; font-size: 1.55rem; font-weight: 500; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .strip .d { font-size: .82rem; color: #6b6a66; font-variant-numeric: tabular-nums; }
-.strip .bad { color: #c0392b; } .strip .good { color: #1d7f4e; }
 .q { font-weight: 600; color: #0b0b0b; font-size: 1rem; margin: .4rem 0 0; }
 .qn { color: #6b6a66; font-size: .88rem; margin: .1rem 0 .4rem; max-width: 70ch; }
 @media (max-width: 900px) { .strip { grid-template-columns: repeat(2, 1fr); }
@@ -75,6 +75,11 @@ def delta(current: float, previous: float, kind: str, good_when_up: bool = True)
 
 
 def kpi_strip(now: dd.Kpis, before: dd.Kpis) -> str:
+    response = (
+        "-"
+        if now.median_response_h != now.median_response_h
+        else f"{now.median_response_h:.1f} h"
+    )
     cells = [
         ("Leads", f"{now.leads}", delta(now.leads, before.leads, "pct")),
         (
@@ -95,9 +100,7 @@ def kpi_strip(now: dd.Kpis, before: dd.Kpis) -> str:
         ),
         (
             "1ª resposta",
-            "-"
-            if now.median_response_h != now.median_response_h
-            else f"{now.median_response_h:.1f} h".replace(".", ","),
+            response.replace(".", ","),
             "<span class='d'>mediana, desde 07/08</span>",
         ),
     ]
@@ -111,6 +114,12 @@ def kpi_strip(now: dd.Kpis, before: dd.Kpis) -> str:
 def finding(now: dd.Kpis, before: dd.Kpis) -> str:
     if now.leads == 0:
         return "Nenhum lead no filtro escolhido."
+    if before.leads == 0:
+        return (
+            f"Em jun a ago, {ch.pct(now.booking_rate)} dos atendidos agendaram, {ch.pct(now.show_rate, 0)} "
+            f"dos agendados compareceram e {ch.pct(now.close_rate, 0)} dos avaliados fecharam. "
+            "Sem leads deste filtro em mar a mai para comparar."
+        )
     return (
         f"De mar a mai para jun a ago, o agendamento foi de {ch.pct(before.booking_rate)} para "
         f"{ch.pct(now.booking_rate)} dos atendidos e o comparecimento de {ch.pct(before.show_rate, 0)} para "
@@ -125,13 +134,57 @@ def heading(question: str, note: str) -> None:
     )
 
 
+def chart(fig) -> None:
+    st.plotly_chart(fig, width="stretch", config=ch.CHART_CONFIG)
+
+
+def booking_split(
+    labels: list[str],
+    booked: list[int],
+    bases: list[int],
+    x_title: str,
+    extras: list[str] | None = None,
+) -> None:
+    """Agendou contra não agendou por grupo: o desenho comum de P1, P3 e P5."""
+    extras = extras or [""] * len(labels)
+    chart(
+        ch.split_bars(
+            labels,
+            [
+                Segment("Agendou", booked, ch.ADVANCED),
+                Segment(
+                    "Não agendou",
+                    [b - a for a, b in zip(booked, bases)],
+                    ch.STOPPED,
+                    ch.INK,
+                ),
+            ],
+            [
+                ch.share_note(a, b, "agendou", e)
+                for a, b, e in zip(booked, bases, extras)
+            ],
+            x_title,
+        )
+    )
+
+
+@st.cache_data
+def ad_names(df: pd.DataFrame) -> pd.Series:
+    """Nome curto por anúncio, numerado pelo volume de jun a ago sem filtro: o nome não muda com o filtro."""
+    counts = df[df["periodo"] == "atual"]["ad_id"].value_counts().reset_index()
+    counts = counts.sort_values(["count", "ad_id"], ascending=[False, True])
+    return pd.Series(
+        [f"Anúncio {i + 1}" for i in range(len(counts))], index=counts["ad_id"].tolist()
+    )
+
+
 def sidebar(df: pd.DataFrame) -> tuple[str, list[str], list[str]]:
     with st.sidebar:
         st.markdown("**Filtros**")
         st.caption(
             f"Recorte {PERIOD_NAMES['atual']}, comparado a {PERIOD_NAMES['anterior']}."
         )
-        origin = st.radio("Origem do lead", dd.ORIGINS, horizontal=False)
+        origin = st.radio("Origem do lead", dd.ORIGINS)
         platforms = st.multiselect(
             "Plataforma do anúncio",
             ["Instagram", "Facebook", "Sem dado"],
@@ -151,48 +204,54 @@ def sidebar(df: pd.DataFrame) -> tuple[str, list[str], list[str]]:
     return origin, platforms, ad_ids
 
 
-@st.cache_data
-def ad_names(df: pd.DataFrame) -> pd.Series:
-    """Nome curto por anúncio, numerado pelo volume de jun a ago sem filtro: o nome não muda com o filtro."""
-    counts = df[df["periodo"] == "atual"]["ad_id"].value_counts().reset_index()
-    counts = counts.sort_values(["count", "ad_id"], ascending=[False, True])
-    return pd.Series(
-        [f"Anúncio {i + 1}" for i in range(len(counts))],
-        index=counts["ad_id"].tolist(),
-    )
-
-
 def tab_funnel(df: pd.DataFrame) -> None:
     f = dd.funnel(df)
-    now, before = f[f["periodo"] == "atual"], f[f["periodo"] == "anterior"]
-    left, right = st.columns([1, 1.15], gap="large")
+    now, before = (
+        f[f["periodo"] == "atual"],
+        f[f["periodo"] == "anterior"].set_index("etapa"),
+    )
+    left, right = st.columns([1, 1.25], gap="large")
     with left:
         heading(
             "Quantos chegam a cada etapa",
             "Jun a ago. Rótulo: leads e % do total que entrou.",
         )
-        st.plotly_chart(
+        chart(
             ch.funnel_bars(
                 now["etapa"].tolist(), now["leads"].tolist(), int(now["leads"].iloc[0])
-            ),
-            width="stretch",
-            config={"displayModeBar": False},
+            )
         )
     with right:
         heading(
             "Onde a passagem piorou",
-            "Percentual que avança da etapa anterior para esta.",
+            "Cada barra são os leads de uma etapa em jun a ago, divididos entre quem avançou para a "
+            "seguinte e quem parou. Ao lado, a taxa de mar a mai para comparar.",
         )
-        steps = now["etapa"].tolist()[1:]
-        prev = (
-            before.set_index("etapa").reindex(steps)["passagem"].tolist()
-            if len(before)
-            else None
-        )
-        st.plotly_chart(
-            ch.compare_bars(steps, now["passagem"].tolist()[1:], prev),
-            width="stretch",
-            config={"displayModeBar": False},
+        stages, counts = now["etapa"].tolist(), now["leads"].astype(int).tolist()
+        labels = [f"{stages[i - 1]} → {stages[i]}" for i in range(1, len(stages))]
+        advanced, bases = counts[1:], counts[:-1]
+        extras = [
+            f"antes {ch.pct(before['passagem'].get(s, float('nan')))}"
+            for s in stages[1:]
+        ]
+        chart(
+            ch.split_bars(
+                labels,
+                [
+                    Segment("Avançou", advanced, ch.ADVANCED),
+                    Segment(
+                        "Parou",
+                        [b - a for a, b in zip(advanced, bases)],
+                        ch.STOPPED,
+                        ch.INK,
+                    ),
+                ],
+                [
+                    ch.share_note(a, b, "avançou", e)
+                    for a, b, e in zip(advanced, bases, extras)
+                ],
+                "leads",
+            )
         )
     show = f.assign(
         passagem=f["passagem"].map(ch.pct),
@@ -222,38 +281,31 @@ def tab_service(current: pd.DataFrame) -> None:
         )
         heading(
             "P1. Responder rápido faz agendar mais?",
-            "Taxa de agendamento por tempo da 1ª resposta da equipe. Faixas com poucos leads oscilam muito.",
+            "Leads por tempo até a 1ª resposta da equipe, divididos entre quem agendou e quem não. "
+            "Faixas com poucos leads oscilam muito.",
         )
-        st.plotly_chart(
-            ch.rate_bars(
-                rt.index.tolist(),
-                rt["taxa_agendamento"].tolist(),
-                rt["leads"].astype(int).tolist(),
-                "leads",
-            ),
-            width="stretch",
-            config={"displayModeBar": False},
+        booking_split(
+            rt.index.tolist(),
+            rt["agendou"].astype(int).tolist(),
+            rt["leads"].astype(int).tolist(),
+            "leads",
         )
         eng = mine.engagement(covered)
         heading(
             "P3. Quem conversa, agenda?",
-            "Taxa de agendamento por número de mensagens enviadas pelo lead.",
+            "Leads pelo número de mensagens que mandaram, divididos entre "
+            "quem agendou e quem não.",
         )
-        st.plotly_chart(
-            ch.rate_bars(
-                [f"{m} msg" for m in eng["msgs_do_lead"]],
-                eng["taxa_agendamento"].tolist(),
-                eng["leads"].tolist(),
-                "leads",
-            ),
-            width="stretch",
-            config={"displayModeBar": False},
+        booking_split(
+            [f"{m} msg" for m in eng["msgs_do_lead"]],
+            eng["agendou"].tolist(),
+            eng["leads"].tolist(),
+            "leads",
         )
     with right:
-        from_ads = current[~current["cadastro_manual"]]
-        grid = dd.entry_heatmap(from_ads)
+        grid = dd.entry_heatmap(current[~current["cadastro_manual"]])
         days, bands = mine.WEEKDAYS, [b[2] for b in dd.HOUR_BANDS]
-        pivot = grid.pivot(index="dia", columns="faixa", values="leads").reindex(
+        leads = grid.pivot(index="dia", columns="faixa", values="leads").reindex(
             index=days, columns=bands
         )
         booked = grid.pivot(index="dia", columns="faixa", values="agendou").reindex(
@@ -264,14 +316,9 @@ def tab_service(current: pd.DataFrame) -> None:
             "Leads de anúncio por dia e hora de entrada, jun a ago. "
             "Passe o mouse para ver quantos agendaram.",
         )
-        st.plotly_chart(
-            ch.heatmap(days, bands, pivot.values.tolist(), booked.values.tolist()),
-            width="stretch",
-            config={"displayModeBar": False},
-        )
+        chart(ch.heatmap(days, bands, leads.values.tolist(), booked.values.tolist()))
         hours = mine.entry_time(covered).set_index("entrada")
-        cols = st.columns(len(hours))
-        for col, (name, row) in zip(cols, hours.iterrows()):
+        for col, (name, row) in zip(st.columns(len(hours)), hours.iterrows()):
             wait = row["mediana_resposta_min"]
             col.metric(
                 f"1ª resposta, {name}",
@@ -282,13 +329,11 @@ def tab_service(current: pd.DataFrame) -> None:
 
 def tab_show_up(current: pd.DataFrame) -> None:
     ns = mine.no_show(current)
+    ns = ns[ns["espera"] != "sem data"] if not ns.empty else ns
     if ns.empty:
-        st.info("Nenhum agendamento neste filtro.")
+        st.info("Nenhum agendamento com data de consulta neste filtro.")
         return
-    ns = ns[ns["espera"] != "sem data"]
-    if ns.empty:
-        st.info("Os agendamentos deste filtro não têm data de consulta.")
-        return
+    booked, missed = int(current["agendou"].sum()), int(current["faltou"].sum())
     left, right = st.columns([1.4, 1], gap="large")
     with left:
         heading(
@@ -296,19 +341,27 @@ def tab_show_up(current: pd.DataFrame) -> None:
             "Cada barra são as consultas marcadas na faixa de espera (dias entre a entrada do lead "
             "e a data da consulta), divididas entre quem compareceu e quem faltou.",
         )
-        pending = (ns["agendados"] - ns["faltou"] - ns["avaliado"]).clip(lower=0)
-        st.plotly_chart(
-            ch.outcome_bars(
+        pending = (
+            (ns["agendados"] - ns["faltou"] - ns["avaliado"]).clip(lower=0).tolist()
+        )
+        segments = [
+            Segment("Compareceu", ns["avaliado"].tolist(), ch.ADVANCED),
+            Segment("Faltou", ns["faltou"].tolist(), ch.MISSED),
+        ]
+        if any(pending):
+            segments.append(Segment("Ainda sem desfecho", pending, ch.STOPPED, ch.INK))
+        chart(
+            ch.split_bars(
                 ns["espera"].astype(str).tolist(),
-                ns["avaliado"].tolist(),
-                ns["faltou"].tolist(),
-                pending.tolist(),
-            ),
-            width="stretch",
-            config={"displayModeBar": False},
+                segments,
+                [
+                    ch.share_note(m, t, "faltou")
+                    for m, t in zip(ns["faltou"], ns["agendados"])
+                ],
+                "consultas marcadas",
+            )
         )
     with right:
-        booked, missed = int(current["agendou"].sum()), int(current["faltou"].sum())
         st.metric("Agendados", booked)
         st.metric("Faltaram", missed, help="Lead que está na etapa Faltante do CRM.")
         st.metric(
@@ -317,8 +370,8 @@ def tab_show_up(current: pd.DataFrame) -> None:
         worst = ns.loc[ns["faltou"].idxmax()]
         if worst["faltou"] > 0:
             st.caption(
-                f"A faixa de {worst['espera']} concentra as faltas: {int(worst['faltou'])} de "
-                f"{missed}. Lembrete na véspera e confirmação no dia atacam essa janela."
+                f"A faixa de {worst['espera']} concentra as faltas: {int(worst['faltou'])} de {missed}. "
+                "Lembrete na véspera e confirmação no dia atacam essa janela."
             )
 
 
@@ -334,37 +387,28 @@ def tab_ads(current: pd.DataFrame, names: pd.Series) -> None:
         ordem=table["ad_id"].map(order),
     ).sort_values(["leads", "ordem"], ascending=[False, True], na_position="last")
     top = table.head(10)
-    left, right = st.columns([1.2, 1], gap="large")
+    left, right = st.columns([1.4, 1], gap="large")
     with left:
         heading(
             "P5. Quais anúncios trazem paciente que agenda?",
-            "Os 10 anúncios com mais leads no recorte. Rótulo: taxa de agendamento.",
+            "Os 10 anúncios com mais leads no recorte, divididos entre quem agendou e quem não.",
         )
-        hover = [
-            f"{r.anuncio}: {r.leads} leads, {r.agendou} agendaram, {r.vendeu} venda(s)"
-            for r in top.itertuples()
+        sales = [
+            f"{v} venda" + ("s" if v > 1 else "") if v else "" for v in top["vendeu"]
         ]
-        st.plotly_chart(
-            ch.hbar_list(
-                top["anuncio"].tolist(),
-                top["leads"].tolist(),
-                [
-                    f"{r.leads} leads · {ch.pct(r.taxa_agendamento)} agenda"
-                    for r in top.itertuples()
-                ],
-                hover,
-                40 * len(top) + 40,
-            ),
-            width="stretch",
-            config={"displayModeBar": False},
+        booking_split(
+            top["anuncio"].tolist(),
+            top["agendou"].tolist(),
+            top["leads"].tolist(),
+            "leads",
+            sales,
         )
     with right:
         st.metric("Leads de anúncio", len(from_ads))
         st.metric("Vendas vindas de anúncio", int(from_ads["vendeu"].sum()))
         if "custo_por_lead" not in table.columns:
             st.warning(
-                "Custo por lead, CAC e ROAS aguardam a exportação do Meta Ads "
-                "(data/raw/meta_ads.csv)."
+                "Custo por lead, CAC e ROAS aguardam a exportação do Meta Ads (data/raw/meta_ads.csv)."
             )
     cols = [
         "anuncio",
@@ -391,20 +435,40 @@ def tab_ads(current: pd.DataFrame, names: pd.Series) -> None:
 
 
 def tab_revenue(df: pd.DataFrame, current: pd.DataFrame) -> None:
-    by_period = mine.summarize(df, "periodo").set_index("periodo")
-    left, right = st.columns(2, gap="large")
+    left, right = st.columns([1.3, 1], gap="large")
     with left:
-        heading("Receita do trimestre", "Soma do valor fechado das vendas.")
-        cols = st.columns(2)
-        for col, key, name in zip(
-            cols, ("atual", "anterior"), ("Jun a ago", "Mar a mai")
-        ):
-            value = by_period["receita"].get(key, 0.0)
-            sales = int(by_period["vendeu"].get(key, 0))
-            col.metric(name, ch.brl(value), help=f"{sales} venda(s)")
-        sold = current[current["vendeu"]]
-        st.caption(
-            f"{len(sold)} venda(s) no recorte; {int(sold['cadastro_manual'].sum())} de cadastro manual."
+        heading(
+            "De onde vem a receita",
+            "Receita fechada de cada trimestre, dividida entre paciente vindo do anúncio e paciente "
+            "cadastrado à mão pela equipe.",
+        )
+        sold = df[df["vendeu"]]
+        periods = [("atual", "Jun a ago"), ("anterior", "Mar a mai")]
+        by = {k: sold[sold["periodo"] == k] for k, _ in periods}
+        ads_rev = [
+            float(by[k].loc[~by[k]["cadastro_manual"], "receita"].sum())
+            for k, _ in periods
+        ]
+        manual_rev = [
+            float(by[k].loc[by[k]["cadastro_manual"], "receita"].sum())
+            for k, _ in periods
+        ]
+        notes = [
+            f"<b>{ch.brl(by[k]['receita'].sum())}</b><br><span style='color:{ch.MUTED}'>({len(by[k])} vendas, "
+            f"{int(by[k]['cadastro_manual'].sum())} de cadastro manual)</span>"
+            for k, _ in periods
+        ]
+        chart(
+            ch.split_bars(
+                [name for _, name in periods],
+                [
+                    Segment("Anúncio", ads_rev, ch.ADVANCED),
+                    Segment("Cadastro manual", manual_rev, ch.MANUAL),
+                ],
+                notes,
+                "receita (R$)",
+                money=True,
+            )
         )
     with right:
         heading(
@@ -420,6 +484,8 @@ def tab_revenue(df: pd.DataFrame, current: pd.DataFrame) -> None:
                     ".", ","
                 ),
             )
+        if lost.empty:
+            st.caption("Nenhum vazamento a estimar neste filtro.")
 
 
 def main() -> None:
