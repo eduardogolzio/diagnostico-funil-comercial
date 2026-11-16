@@ -8,5 +8,8 @@
 - Projeto passa a ser assinado pela Nexus Assessoria (2026-11-12)
 - PDF do diagnóstico com a pergunta de negócio, as cinco perguntas complementares e o esboço do dashboard (2026-11-12)
 
+### Fixed
+- Gráfico de comparecimento mostra, por faixa de espera, quantos compareceram e quantos faltaram; filtro sem lead de anúncio não derruba mais a página (2026-11-16)
+
 ### Security
 - Dados de pacientes anonimizados na extração; nomes da clínica, da agência e dos sistemas omitidos (2026-11-12)

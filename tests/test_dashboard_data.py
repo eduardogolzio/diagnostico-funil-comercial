@@ -96,3 +96,11 @@ def test_heatmap_has_every_cell_and_puts_hour_18_in_evening_band():
     assert len(grid) == 7 * 4
     hit = grid[grid["leads"] > 0]
     assert hit[["dia", "faixa", "agendou"]].values.tolist() == [["qua", "18h a 24h", 1]]
+
+
+def test_mining_tables_on_empty_filter_keep_their_columns():
+    import mine
+
+    empty = frame({}).iloc[0:0].assign(receita=[])
+    assert mine.ads(empty).empty
+    assert "leads" in mine.summarize(empty, "periodo").columns

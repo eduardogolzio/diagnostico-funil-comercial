@@ -46,7 +46,17 @@ def summarize(df: pd.DataFrame, by: str) -> pd.DataFrame:
                 "receita": round(g["receita"].sum(), 2),
             }
         )
-    return pd.DataFrame(rows)
+    # Colunas explícitas: recorte vazio (filtro do dashboard) devolve tabela vazia, não sem colunas.
+    columns = [
+        by,
+        "leads",
+        "agendou",
+        "taxa_agendamento",
+        "vendeu",
+        "taxa_venda",
+        "receita",
+    ]
+    return pd.DataFrame(rows, columns=columns)
 
 
 def response_time(df: pd.DataFrame) -> pd.DataFrame:

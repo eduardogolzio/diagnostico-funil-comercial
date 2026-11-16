@@ -286,18 +286,23 @@ def tab_show_up(current: pd.DataFrame) -> None:
         st.info("Nenhum agendamento neste filtro.")
         return
     ns = ns[ns["espera"] != "sem data"]
+    if ns.empty:
+        st.info("Os agendamentos deste filtro não têm data de consulta.")
+        return
     left, right = st.columns([1.4, 1], gap="large")
     with left:
         heading(
             "P4. Esperar mais pela consulta faz faltar mais?",
-            "Taxa de falta por dias entre a entrada do lead e a consulta marcada.",
+            "Cada barra são as consultas marcadas na faixa de espera (dias entre a entrada do lead "
+            "e a data da consulta), divididas entre quem compareceu e quem faltou.",
         )
+        pending = (ns["agendados"] - ns["faltou"] - ns["avaliado"]).clip(lower=0)
         st.plotly_chart(
-            ch.rate_bars(
+            ch.outcome_bars(
                 ns["espera"].astype(str).tolist(),
-                ns["taxa_falta"].tolist(),
-                ns["agendados"].tolist(),
-                "agendados",
+                ns["avaliado"].tolist(),
+                ns["faltou"].tolist(),
+                pending.tolist(),
             ),
             width="stretch",
             config={"displayModeBar": False},
@@ -309,10 +314,12 @@ def tab_show_up(current: pd.DataFrame) -> None:
         st.metric(
             "Taxa de falta", ch.pct(missed / booked if booked else float("nan"), 0)
         )
-        st.caption(
-            "A faixa de 3 a 7 dias concentra as faltas. Lembrete na véspera e confirmação no dia "
-            "atacam essa janela."
-        )
+        worst = ns.loc[ns["faltou"].idxmax()]
+        if worst["faltou"] > 0:
+            st.caption(
+                f"A faixa de {worst['espera']} concentra as faltas: {int(worst['faltou'])} de "
+                f"{missed}. Lembrete na véspera e confirmação no dia atacam essa janela."
+            )
 
 
 def tab_ads(current: pd.DataFrame, names: pd.Series) -> None:

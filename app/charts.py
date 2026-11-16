@@ -200,3 +200,49 @@ def hbar_list(
         showgrid=False, showticklabels=False, range=[0, max(values + [1]) * 1.6]
     )
     return _style(fig, height)
+
+
+MISSED = "#d95926"  # faltou: segundo tom, só neste gráfico, sempre com legenda e rótulo
+
+
+def outcome_bars(
+    bands: list[str], attended: list[int], missed: list[int], pending: list[int]
+) -> go.Figure:
+    """Cada barra é o total de agendados da faixa, dividido em quem compareceu e quem faltou."""
+    segments = [("Compareceu", attended, CURRENT), ("Faltou", missed, MISSED)]
+    if any(pending):
+        segments.append(("Ainda sem desfecho", pending, PREVIOUS))
+    fig = go.Figure()
+    for name, values, color in segments:
+        fig.add_bar(
+            name=name,
+            y=bands,
+            x=values,
+            orientation="h",
+            marker=dict(color=color, line=dict(color=SURFACE, width=2)),
+            text=[v if v else "" for v in values],
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color=SURFACE, size=13),
+            hovertemplate="%{y}: %{x} " + name.lower() + "<extra></extra>",
+        )
+    totals = [a + m + p for a, m, p in zip(attended, missed, pending)]
+    for band, total, miss in zip(bands, totals, missed):
+        fig.add_annotation(
+            y=band,
+            x=total,
+            xanchor="left",
+            xshift=8,
+            showarrow=False,
+            font=dict(color=INK, size=13),
+            text=f"<b>{pct(miss / total, 0) if total else '-'}</b> faltou  "
+            f"<span style='color:{MUTED}'>({miss} de {total})</span>",
+        )
+    fig.update_layout(barmode="stack", showlegend=True, legend_traceorder="normal")
+    fig.update_yaxes(autorange="reversed", showgrid=False, tickfont=dict(color=INK, size=13))
+    fig.update_xaxes(
+        range=[0, max(totals + [1]) * 1.55],
+        nticks=5,
+        title=dict(text="consultas marcadas", font=dict(size=12)),
+    )
+    return _style(fig, 60 * len(bands) + 110)
