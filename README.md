@@ -2,7 +2,7 @@
 
 **Cliente:** Clínica odontológica em Campina Grande - PB
 **Assessoria:** Nexus Assessoria (Eduardo e Henrique)
-**Status:** fase 2 entregue (fontes, limpeza e regra de negócio)
+**Status:** fase 3 entregue (dashboard de acompanhamento)
 
 Projeto da Nexus Assessoria, assessoria comercial, desenvolvido na disciplina de Análise de Dados e BI. Os nomes da clínica, da
 agência de publicidade que gere os anúncios e dos sistemas usados foram omitidos por confidencialidade.
@@ -33,7 +33,7 @@ isso representa?
 | 2 | [Fontes de dados](entregaveis/01-fontes-de-dados.md) | entregue |
 | 2 | [Limpeza e mineração dos dados](entregaveis/02-limpeza-e-mineracao.md) | entregue |
 | 2 | [Regra de negócio, objetivo, métricas e perguntas complementares](entregaveis/03-regra-de-negocio.md) | entregue |
-| 3 | Dashboard de acompanhamento (Streamlit); esboço da interface no [PDF](entregaveis/00-diagnostico-e-perguntas.pdf) | próxima fase |
+| 3 | [Dashboard de acompanhamento (Streamlit)](app/dashboard.py), abas Funil, Atendimento (P1 a P3), Comparecimento (P4), Anúncios (P5) e Receita | entregue |
 
 ## Principais achados até aqui
 
@@ -62,7 +62,9 @@ CRM e Meta Ads ──extração anonimizada──> data/raw/ ──src/clean.py�
 entregaveis/     documentos entregues ao cliente (00 em PDF, 01 a 03 em Markdown)
 src/clean.py     limpeza, com log por passo em data/processed/limpeza_log.csv
 src/mine.py      mineração por segmento, uma tabela por pergunta
-tests/           testes das regras de limpeza
+src/dashboard_data.py  filtros e indicadores do dashboard
+app/             dashboard Streamlit (dashboard.py) e gráficos Plotly (charts.py)
+tests/           testes das regras de limpeza e dos indicadores do dashboard
 data/raw/        dados extraídos, já sem dado pessoal
 data/processed/  base tratada, resumo do funil e tabelas de mineração
 ```
@@ -74,7 +76,11 @@ pip install -r requirements.txt
 python -m pytest -q tests
 python src/clean.py
 python src/mine.py
+streamlit run app/dashboard.py
 ```
+
+O dashboard abre em http://localhost:8501. Custo por lead, CAC e ROAS aparecem quando
+`data/raw/meta_ads.csv` (exportação do Gerenciador de Anúncios) existir e `src/clean.py` e `src/mine.py` rodarem de novo.
 
 ## Confidencialidade
 

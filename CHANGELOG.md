@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Dashboard de acompanhamento em Streamlit: indicadores do trimestre contra o anterior, filtros de origem, plataforma e anúncio, e uma aba por pergunta do diagnóstico (2026-11-16)
 - Fase 2 do diagnóstico de funil comercial: fontes de dados, limpeza em 11 passos com log, mineração por segmento, regra de negócio com métricas e cinco perguntas complementares (2026-11-12)
 - Projeto passa a ser assinado pela Nexus Assessoria (2026-11-12)
 - PDF do diagnóstico com a pergunta de negócio, as cinco perguntas complementares e o esboço do dashboard (2026-11-12)
